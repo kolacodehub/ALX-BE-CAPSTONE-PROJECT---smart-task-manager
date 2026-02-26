@@ -1,12 +1,13 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import TaskViewSet
+from .views import TaskViewSet, MotivationView
 
 # The router automatically generates the GET, POST, PUT, PATCH, and DELETE routes
 router = DefaultRouter()
 router.register(r"", TaskViewSet, basename="task")
 
 urlpatterns = [
+    path("motivation/", MotivationView.as_view(), name="motivation"),
     path("", include(router.urls)),
 ]
 

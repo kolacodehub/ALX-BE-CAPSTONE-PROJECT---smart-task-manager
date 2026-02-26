@@ -2,10 +2,10 @@
 import requests
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from django_filters.rest_framework import DjangoFilterBackend
 
 # Others sha
-from rest_framework import viewsets
+from rest_framework import viewsets, filters
 from rest_framework.permissions import IsAuthenticated
 from .models import Task
 from .serializers import TaskSerializer
@@ -14,6 +14,22 @@ from .serializers import TaskSerializer
 class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
     permission_classes = [IsAuthenticated]
+
+    # Enable filtering, searching, and ordering
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,
+    ]
+
+    # Exact matches (e.g., /api/tasks/?is_completed=false&priority=High)
+    filterset_fields = ["is_completed", "priority"]
+
+    # Text search (e.g., /api/tasks/?search=study)
+    search_fields = ["title", "description"]
+
+    # Sorting (e.g., /api/tasks/?ordering=-due_date)
+    ordering_fields = ["due_date", "created_at", "priority"]
 
     def get_queryset(self):
         # This override the default queryset so users ONLY see their own tasks

@@ -25,10 +25,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-nh0&poxz1f600l82#tg=-9mc6vc$*+*b%v%+2-a#57$22*r)*q"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = [
+    "alx-be-capstone-project-smart-task-okpg.onrender.com",
+    "localhost",
+    "127.0.0.1",
+]
 
 # Application definition
 

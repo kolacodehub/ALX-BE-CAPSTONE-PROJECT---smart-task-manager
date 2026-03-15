@@ -23,16 +23,26 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-nh0&poxz1f600l82#tg=-9mc6vc$*+*b%v%+2-a#57$22*r)*q"
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.environ.get(
+    "DJANGO_SECRET_KEY", "django-insecure-fallback-key-only-for-local"
+)
+
+# This ensures DEBUG is False on Render but True on your Dell laptop
+DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
 
 ALLOWED_HOSTS = [
+    os.environ.get("RENDER_EXTERNAL_HOSTNAME", "localhost"),
     "alx-be-capstone-project-smart-task-okpg.onrender.com",
-    "localhost",
     "127.0.0.1",
+]
+
+# Add your React app's production URL here
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://smartask.vercel.app",  
 ]
 
 # Application definition
@@ -46,8 +56,10 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # Third-party apps
     "rest_framework",
+    "rest_framework_simplejwt.token_blacklist",
     "django_filters",
     "corsheaders",
+    "whitenoise",
     # Local apps
     "authentication",
     "tasks",
@@ -102,6 +114,10 @@ if os.environ.get("DATABASE_URL"):
         ssl_require=True,
         conn_health_checks=True,
     )
+    # This ensures the connection uses the correct SSL mode for Neon
+    DATABASES["default"]["OPTIONS"] = {
+        "sslmode": "require",
+    }
 
 
 # Password validation
@@ -138,8 +154,14 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = "static/"
 
+STATIC_URL = "static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+
+# For Render to serve static files efficiently
+if not DEBUG:
+    # Use WhiteNoise to serve static files 
+    MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
 
 # Additional setting
 AUTH_USER_MODEL = "authentication.User"
@@ -148,13 +170,19 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
-    "PAGE_SIZE": 10, 
+    "PAGE_SIZE": 10,
 }
 
 # SimpleJWT Configuration
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),  # Safer
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,  # Gives a new refresh token on use
+    "BLACKLIST_AFTER_ROTATION": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
+    "SIGNING_KEY": os.environ.get("JWT_SECRET_KEY", SECRET_KEY),
 }

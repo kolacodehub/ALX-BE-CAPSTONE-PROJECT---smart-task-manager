@@ -47,12 +47,14 @@ INSTALLED_APPS = [
     # Third-party apps
     "rest_framework",
     "django_filters",
+    "corsheaders",
     # Local apps
     "authentication",
     "tasks",
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -97,6 +99,7 @@ if os.environ.get("DATABASE_URL"):
     DATABASES["default"] = dj_database_url.config(
         default=os.environ.get("DATABASE_URL"),
         conn_max_age=600,
+        ssl_require=True,
         conn_health_checks=True,
     )
 
